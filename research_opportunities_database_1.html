@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Submission Index — Research Opportunities Database</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<!-- Firebase: only used if FIREBASE_ENABLED is set to true further down in the page's script. Harmless to load otherwise. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --paper:#FAF9F5;
+    --surface:#FFFFFF;
+    --surface-2:#F2F0E9;
+    --ink:#1B2440;
+    --ink-soft:#5C6478;
+    --rule:#E1DED2;
+    --blue:#2D5BA3;
+    --blue-deep:#1A3B70;
+    --blue-pale:#E8EEF7;
+    --amber:#A8642A;
+    --amber-pale:#F6ECDD;
+    --plum:#6B4F8C;
+    --plum-pale:#EFE8F3;
+    --alert:#AC3B2E;
+    --shadow: 0 10px 24px -10px rgba(27,36,64,.20);
+    --font-display:'Newsreader', Georgia, 'Times New Roman', serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono:'Special Elite', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1180px;margin:0 auto;padding:0 28px 70px;}
+  a{color:var(--blue-deep);}
+
+  /* ---------- Masthead ---------- */
+  .masthead{padding:36px 0 18px;border-bottom:2px solid var(--ink);margin-bottom:26px;}
+  .masthead h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(28px,4vw,44px);
+    letter-spacing:-0.5px;
+    margin:0;
+    color:var(--ink);
+  }
+  .masthead .tagline{
+    font-family:var(--font-display);
+    font-style:italic;
+    font-size:16px;
+    color:var(--ink-soft);
+    margin:6px 0 0;
+    max-width:640px;
+  }
+  .issue-line{
+    font-family:var(--font-body);
+    font-size:11px;
+    letter-spacing:1.4px;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-top:16px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .issue-line .dot{opacity:.55;}
+  .dot{opacity:.55;}
+  .footer-links{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:22px;}
+  .search-input{
+    flex:1 1 200px;
+    padding:10px 14px;
+    border:1px solid var(--rule);
+    border-radius:8px;
+    background:var(--surface);
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--ink);
+  }
+  .search-input:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+  .pill-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .pill{
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:600;
+    padding:8px 15px;
+    border-radius:999px;
+    border:1px solid var(--rule);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .12s ease,color .12s ease,border-color .12s ease;
+  }
+  .pill:hover{border-color:var(--ink-soft);}
+  .pill:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+  .pill.active[data-cat="all"]{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .pill.active[data-cat="STEM"]{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .pill.active[data-cat="Humanities"]{background:var(--amber);border-color:var(--amber);color:#fff;}
+  .pill.active[data-cat="Both"]{background:var(--plum);border-color:var(--plum);color:#fff;}
+  .select-compact{
+    padding:9px 12px;
+    border:1px solid var(--rule);
+    border-radius:8px;
+    background:var(--surface);
+    font-family:var(--font-body);
+    font-size:13px;
+    color:var(--ink);
+  }
+  .select-compact:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+
+  .btn{
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:14px;
+    border-radius:8px;
+    padding:10px 16px;
+    border:1px solid transparent;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .btn svg{flex:none;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-deep);}
+  .btn-secondary{background:var(--surface);border-color:var(--rule);color:var(--ink);}
+  .btn-secondary:hover{border-color:var(--ink-soft);}
+  .btn-danger{background:#fff;border-color:var(--alert);color:var(--alert);}
+  .btn-danger:hover{background:var(--alert);color:#fff;}
+  .btn:focus-visible{outline:2px solid var(--blue-deep);outline-offset:2px;}
+  .icon-btn{
+    background:transparent;border:none;cursor:pointer;color:var(--ink-soft);
+    font-size:18px;line-height:1;padding:4px 8px;border-radius:6px;
+  }
+  .icon-btn:hover{background:var(--surface-2);color:var(--ink);}
+  .link-btn{
+    background:none;border:none;color:var(--ink-soft);font-family:var(--font-body);
+    font-size:13px;text-decoration:underline;cursor:pointer;padding:4px 0;
+  }
+  .link-btn:hover{color:var(--ink);}
+
+  /* ---------- Grid & cards ---------- */
+  #loadingState{padding:60px 0;text-align:center;color:var(--ink-soft);font-style:italic;font-family:var(--font-display);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
+  .card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-top:3px solid var(--ink-soft);
+    border-radius:10px;
+    padding:18px 18px 16px;
+    cursor:pointer;
+    transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
+  .card:focus-visible{outline:2px solid var(--blue-deep);outline-offset:2px;}
+  .card.cat-stem{border-top-color:var(--blue);}
+  .card.cat-humanities{border-top-color:var(--amber);}
+  .card.cat-both{border-top-color:var(--plum);}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .type-tag{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11.5px;letter-spacing:.3px;color:var(--ink-soft);
+    text-transform:uppercase;font-weight:600;
+  }
+  .stamp{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:.5px;
+    border:1.5px solid currentColor;
+    border-radius:3px;
+    padding:3px 7px;
+    display:inline-block;
+    transform:rotate(-5deg);
+    white-space:nowrap;
+    text-transform:uppercase;
+    flex:none;
+  }
+  .stamp.urgent{color:var(--alert);}
+  .stamp.normal{color:var(--blue-deep);}
+  .stamp.muted{color:var(--ink-soft);}
+  .card-title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:18px;
+    line-height:1.25;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .badge.cat-stem{background:var(--blue-pale);color:var(--blue-deep);}
+  .badge.cat-humanities{background:var(--amber-pale);color:var(--amber);}
+  .badge.cat-both{background:var(--plum-pale);color:var(--plum);}
+  .card-blurb{font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;line-height:1.5;}
+  .card-meta{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:10px;}
+  .card-cta{font-weight:600;color:var(--blue-deep);}
+  .empty-state{padding:50px 20px;text-align:center;color:var(--ink-soft);}
+  .empty-state h3{font-family:var(--font-display);color:var(--ink);margin-bottom:6px;}
+
+  /* ---------- Modals ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(20,24,38,.55);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    z-index:100; animation:overlayIn .15s ease;
+  }
+  .modal-overlay[hidden]{display:none;}
+  /* The browser's own default rule for [hidden] is "display:none", but any
+     class that sets its own display value (like .btn's inline-flex, or
+     .modal-footer/.footer-links' flex) wins that tie under normal CSS
+     rules — silently keeping the element visible and clickable even
+     though JS correctly set .hidden = true. This single rule guarantees
+     hidden always actually means hidden, for every element on the page,
+     regardless of what other classes it has. */
+  [hidden]{display:none !important;}
+  .modal{
+    background:var(--surface);border-radius:14px;max-width:580px;width:100%;
+    max-height:88vh;overflow-y:auto; animation:modalIn .18s ease;
+  }
+  .modal-small{max-width:440px;}
+  .modal-header{
+    padding:20px 24px;border-bottom:1px solid var(--rule);
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    position:sticky;top:0;background:var(--surface);
+  }
+  .modal-header h2{font-family:var(--font-display);font-size:21px;margin:0;}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{
+    padding:16px 24px;border-top:1px solid var(--rule);
+    display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    position:sticky;bottom:0;background:var(--surface);
+  }
+  .section-label{
+    font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+    color:var(--ink-soft);margin:18px 0 6px;
+  }
+  .section-label:first-of-type{margin-top:0;}
+  .modal-body p{margin:0 0 4px;}
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:4px;}
+  .detail-head .tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
+  .detail-title{font-family:var(--font-display);font-size:24px;font-weight:600;margin:0 0 10px;}
+  .detail-overview{font-style:italic;color:var(--ink-soft);}
+  .verified{font-size:12px;color:var(--ink-soft);margin-top:16px;}
+  .official-link{margin-top:16px;}
+
+  .field{margin-bottom:14px;display:flex;flex-direction:column;gap:5px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field label{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .field input,.field textarea,.field select{
+    font-family:var(--font-body);font-size:14px;color:var(--ink);
+    border:1px solid var(--rule);border-radius:8px;padding:9px 11px;
+    resize:vertical;width:100%;background:var(--surface);
+  }
+  .field input:focus-visible,.field textarea:focus-visible,.field select:focus-visible{
+    outline:2px solid var(--blue);outline-offset:1px;
+  }
+  .hint{font-size:12.5px;color:var(--ink-soft);margin:2px 0 8px;}
+  textarea#backupExport,textarea#backupImport{
+    width:100%;font-family:var(--font-body);font-size:12.5px;
+    border:1px solid var(--rule);border-radius:8px;padding:10px;margin-bottom:8px;
+  }
+
+  /* ---------- Footer & toast ---------- */
+  .footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--rule);}
+  .footer-note{font-size:12.5px;color:var(--ink-soft);max-width:760px;line-height:1.5;}
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;
+    font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s ease, transform .2s ease;
+    z-index:300;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+  @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+
+  @media (max-width:640px){
+    .page{padding:0 16px 60px;}
+    .field-row{grid-template-columns:1fr;}
+    .masthead{padding-top:24px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <h1>The Submission Index</h1>
+    <div class="issue-line" id="issueLine"></div>
+  </header>
+
+  <div class="toolbar">
+    <input type="search" id="searchInput" class="search-input" placeholder="Search by name or keyword…">
+    <div class="pill-group" id="categoryPills">
+      <button class="pill active" data-cat="all" type="button">All</button>
+      <button class="pill" data-cat="STEM" type="button">STEM</button>
+      <button class="pill" data-cat="Humanities" type="button">Humanities</button>
+      <button class="pill" data-cat="Both" type="button">Both</button>
+    </div>
+    <select id="typeFilter" class="select-compact">
+      <option value="all">All types</option>
+      <option value="Journal">Journals</option>
+      <option value="Competition">Competitions</option>
+      <option value="Conference">Conferences</option>
+    </select>
+    <select id="sortSelect" class="select-compact">
+      <option value="deadline">Soonest deadline</option>
+      <option value="name">Name A–Z</option>
+    </select>
+    <button class="btn btn-primary" id="addBtn" type="button"></button>
+  </div>
+
+  <div id="loadingState">Loading your database…</div>
+  <div class="grid" id="grid" hidden></div>
+  <div class="empty-state" id="emptyState" hidden>
+    <h3>Nothing matches yet</h3>
+    <p>Try clearing a filter or your search, or click “Add opportunity” to add the one you have in mind.</p>
+  </div>
+
+  <footer class="footer">
+    <p class="footer-note">Programs change deadlines, fees, and requirements every cycle. Treat this as a strong starting point and confirm details on the official site before anyone submits. Missing something? Click “Add opportunity” above.</p>
+    <div class="footer-links" id="lockedFooterLinks" hidden>
+      <button class="link-btn" id="unlockBtn" type="button">Mentor? Unlock editing</button>
+    </div>
+    <div class="footer-links" id="unlockedFooterLinks" hidden>
+      <button class="link-btn" id="backupBtn" type="button">Back up or restore this data</button>
+      <span class="dot">·</span>
+      <button class="link-btn" id="lockBtn" type="button">Lock editing on this device</button>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="detailModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2>Details</h2>
+      <button class="icon-btn" id="detailClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer" id="detailFooter">
+      <button class="btn btn-danger" id="removeBtn" type="button">Remove</button>
+      <button class="btn btn-secondary" id="editBtn" type="button">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unlock editing modal -->
+<div class="modal-overlay" id="unlockModal" hidden>
+  <div class="modal modal-small" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2>Unlock editing</h2>
+      <button class="icon-btn" id="unlockClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="hint">Enter the mentor passcode to turn on editing for this device. Without it, this page is read-only with no Add, Edit, or Remove controls.</p>
+      <div class="field"><input type="password" id="unlockInput" placeholder="Passcode"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="unlockCancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="unlockSubmit" type="button">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit modal -->
+<div class="modal-overlay" id="formModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 id="formTitle">Add opportunity</h2>
+      <button class="icon-btn" id="formClose" aria-label="Close">✕</button>
+    </div>
+    <form id="entryForm">
+      <div class="modal-body">
+        <div class="field">
+          <label for="f-name">Name *</label>
+          <input required id="f-name" type="text" placeholder="e.g. Regeneron Science Talent Search">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-type">Type *</label>
+            <select required id="f-type">
+              <option value="">Choose…</option>
+              <option>Journal</option>
+              <option>Competition</option>
+              <option>Conference</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-category">Category *</label>
+            <select required id="f-category">
+              <option value="">Choose…</option>
+              <option>STEM</option>
+              <option>Humanities</option>
+              <option>Both</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-link">Official website *</label>
+          <input required id="f-link" type="url" placeholder="https://…">
+        </div>
+        <div class="field">
+          <label for="f-blurb">One-line summary</label>
+          <input id="f-blurb" type="text" placeholder="What is this, in a sentence?">
+        </div>
+
+        <div class="section-label">Deadline</div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-deadlineDate">Fixed date (if there is one)</label>
+            <input id="f-deadlineDate" type="date">
+          </div>
+          <div class="field">
+            <label for="f-deadlineText">Notes</label>
+            <input id="f-deadlineText" type="text" placeholder="Rolling, varies by region, etc.">
+          </div>
+        </div>
+
+        <div class="section-label">Eligibility</div>
+        <div class="field"><textarea id="f-eligibility" rows="2" placeholder="Grade levels, location, individual or team…"></textarea></div>
+
+        <div class="section-label">What you submit</div>
+        <div class="field"><textarea id="f-whatYouSubmit" rows="2" placeholder="Length, format, required materials…"></textarea></div>
+
+        <div class="section-label">Fee</div>
+        <div class="field"><input id="f-fee" type="text" placeholder="Free, or $50 entry fee"></div>
+
+        <div class="section-label">How to apply</div>
+        <div class="field"><textarea id="f-howToApply" rows="2" placeholder="Apply directly online, or qualify through a regional fair first…"></textarea></div>
+
+        <div class="section-label">Good to know</div>
+        <div class="field"><textarea id="f-notes" rows="2" placeholder="Anything else worth flagging"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="formCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save opportunity</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm modal (reused for delete + restore) -->
+<div class="modal-overlay" id="confirmModal" hidden>
+  <div class="modal modal-small" role="dialog" aria-modal="true">
+    <div class="modal-body"><p id="confirmMessage"></p></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="confirmCancel" type="button">Cancel</button>
+      <button class="btn btn-danger" id="confirmOk" type="button">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup / restore modal -->
+<div class="modal-overlay" id="backupModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2>Back up &amp; restore</h2>
+      <button class="icon-btn" id="backupClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-label">Your current data</div>
+      <p class="hint">Copy this somewhere safe (a note or doc) so you always have a backup.</p>
+      <textarea id="backupExport" rows="6" readonly></textarea>
+      <button class="btn btn-secondary" id="backupSelectAll" type="button">Select all</button>
+      <div class="section-label">Restore from backup</div>
+      <p class="hint">Paste previously-exported text below. This replaces everything currently in the database.</p>
+      <textarea id="backupImport" rows="6" placeholder="Paste backup text here"></textarea>
+      <button class="btn btn-primary" id="backupRestoreBtn" type="button">Restore</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "submission_index_opportunities_v1";
+  var SHARED = true;
+  var EDIT_UNLOCK_KEY = "submission_index_edit_unlocked";
+  // Change this string to set your own passcode / special link. Whoever knows
+  // this value can unlock editing on their device, either by typing it into
+  // the "Unlock editing" prompt or by visiting yoursite.com/?edit=THIS_VALUE
+  var EDIT_PASSPHRASE = "mentor2026";
+
+  // ============================================================
+  // REAL-TIME SYNC — currently ON, connected to the "papers-publication-
+  // resource" Firebase project. Anything added or edited on the live site
+  // saves centrally and shows up for every visitor automatically, no
+  // re-upload needed for data changes. Set FIREBASE_ENABLED to false to
+  // turn this off and fall back to each visitor's own local copy instead.
+  var FIREBASE_ENABLED = true;
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyANWLDjHmit1evEABJv3u3zAs-_gU0_R68",
+    authDomain: "papers-publication-resource.firebaseapp.com",
+    projectId: "papers-publication-resource",
+    storageBucket: "papers-publication-resource.firebasestorage.app",
+    messagingSenderId: "870306580349",
+    appId: "1:870306580349:web:3d98d3e79198eb6a702e14"
+  };
+  var firestoreDb = null;
+  // ============================================================
+
+  var ICONS = {
+    plus:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    tag:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h9l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg>',
+    external:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>',
+    journal:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
+    competition:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4M17 5h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4"/></svg>',
+    conference:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><circle cx="17" cy="8" r="2.6"/><path d="M16 14c2.8.3 5 2.1 5 4.6"/></svg>'
+  };
+
+  var DEFAULT_DATA = [
+    {
+      id:"sts", name:"Regeneron Science Talent Search", type:"Competition", category:"STEM",
+      blurb:"The country's oldest and most prestigious independent research competition for graduating seniors.",
+      deadlineDate:"2026-11-05", deadlineText:"8:00 PM ET",
+      eligibility:"US high school seniors (any citizenship), including students living abroad and homeschoolers. Research can be from any year of high school, not just senior year.",
+      whatYouSubmit:"A complete online application: a research paper up to 20 pages, several short essays about you and your activities, three recommendations, and a transcript.",
+      fee:"Free",
+      howToApply:"Apply directly through the Society for Science's online portal.",
+      notes:"Only individual research is eligible; team projects don't qualify. Top award is $250,000; 300 Scholars and 40 Finalists are recognized each year.",
+      link:"https://www.societyforscience.org/regeneron-sts/", lastVerified:"June 2026"
+    },
+    {
+      id:"isef", name:"Regeneron International Science and Engineering Fair (ISEF)", type:"Competition", category:"STEM",
+      blurb:"The world's largest pre-college STEM showcase, with one catch: the only way in is through a local fair first.",
+      deadlineDate:null, deadlineText:"Set by your affiliated fair (no direct deadline), usually Jan–Apr",
+      eligibility:"Grades 9–12 (or equivalent), under 20 years old by May 1 of the competition year. Individual or teams of up to 3.",
+      whatYouSubmit:"Original research from up to 12 months of continuous work, presented as a project board and abstract in English.",
+      fee:"Free at ISEF itself; your local or regional qualifying fair may charge a small fee",
+      howToApply:"You can't apply directly to ISEF. Win a top award at a Society-affiliated local, regional, or state fair to earn your spot.",
+      notes:"Use the “Find a Fair” tool on the official site; your affiliated fair's deadline is the one that actually matters for you.",
+      link:"https://www.societyforscience.org/isef/", lastVerified:"June 2026"
+    },
+    {
+      id:"jshs", name:"Junior Science and Humanities Symposium (JSHS)", type:"Conference", category:"STEM",
+      blurb:"Defense Department–sponsored regional symposia where students present original STEM research for scholarships.",
+      deadlineDate:null, deadlineText:"Set by your region, typically Dec–Feb",
+      eligibility:"Grades 9–12, US and territories, plus DoDEA schools worldwide.",
+      whatYouSubmit:"An original research paper and abstract; top entries present a talk or poster at the regional symposium.",
+      fee:"Free",
+      howToApply:"Find your region at jshs.org and submit through that regional program.",
+      notes:"The national program paused for a stretch and only just relaunched in 2026, so some regional pages may still be catching up. Confirm your region is active before counting on it.",
+      link:"https://jshs.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"ajas", name:"American Junior Academy of Science (AJAS)", type:"Conference", category:"STEM",
+      blurb:"A national honor society and research conference held alongside the AAAS annual meeting.",
+      deadlineDate:null, deadlineText:"Set by your state Academy of Science, often a fall nomination",
+      eligibility:"Grades 9–12; you're nominated as a delegate by your state's Academy of Science.",
+      whatYouSubmit:"A research abstract or paper and a poster or oral presentation; most states require placing well at a state science fair or JSHS first.",
+      fee:"Varies by state; families often cover some travel costs",
+      howToApply:"No direct application; contact your state's Academy (or Junior Academy) of Science to learn their nomination process.",
+      notes:"The 2027 national meeting runs February 10–13 in Chicago, IL, alongside the AAAS conference.",
+      link:"https://www.academiesofscience.org/ajas.php", lastVerified:"June 2026"
+    },
+    {
+      id:"jei", name:"Journal of Emerging Investigators", type:"Journal", category:"STEM",
+      blurb:"A peer-reviewed journal that pairs each student author with a PhD mentor to polish the paper for publication.",
+      deadlineDate:null, deadlineText:"Rolling; submit anytime",
+      eligibility:"Grades 6–12, any country, manuscript written in English.",
+      whatYouSubmit:"Original, hypothesis-driven research (no literature reviews), using JEI's required manuscript template.",
+      fee:"$49 per submission (fee waivers available for students who need one)",
+      howToApply:"Submit online; the submission must be made by an adult on the student's behalf.",
+      notes:"Only one manuscript per student at a time. No separate fee once your paper is accepted.",
+      link:"https://emerginginvestigators.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"nhsjs", name:"National High School Journal of Science (NHSJS)", type:"Journal", category:"STEM",
+      blurb:"A free, student-run, peer-reviewed journal for original research and science or policy writing.",
+      deadlineDate:null, deadlineText:"Rolling, accepted year-round",
+      eligibility:"Grades 9–12, anywhere in the world (research must have been done while in high school).",
+      whatYouSubmit:"An original research paper (5+ figures or tables) or a shorter policy/review article.",
+      fee:"Free to submit. Several independent sources cite a roughly $250 publication fee if your paper is accepted, though NHSJS's own site doesn't clearly confirm this; worth asking directly before you submit",
+      howToApply:"Submit through the online portal at nhsjs.com.",
+      notes:"Median review time is about 8 weeks; a paid expedited review option is available.",
+      link:"https://nhsjs.com/", lastVerified:"June 2026"
+    },
+    {
+      id:"cjsj", name:"Columbia Junior Science Journal", type:"Journal", category:"STEM",
+      blurb:"A high-school sibling of Columbia's undergraduate science journal, run by the same editorial team.",
+      deadlineDate:null, deadlineText:"Annual window, roughly July–September (exact date varies by year)",
+      eligibility:"High school students worldwide; not open to recent graduates.",
+      whatYouSubmit:"A 2–3 page original research paper or a 4–5 page review article, plus a signed permission-to-publish form.",
+      fee:"Free",
+      howToApply:"Submit through the online portal during the open window; join their mailing list to catch the exact dates.",
+      notes:"Notifications go out in stages: semifinalists in early November, finalists in late December.",
+      link:"https://columbiajuniorsciencejournal.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"breakthrough", name:"Breakthrough Junior Challenge", type:"Competition", category:"STEM",
+      blurb:"A global science-video competition where you explain a big idea in physics, life sciences, or math in just a couple of minutes.",
+      deadlineDate:"2026-09-15", deadlineText:"11:59 PM Pacific",
+      eligibility:"Ages 13–18, enrolled in secondary school or homeschool, from most countries worldwide.",
+      whatYouSubmit:"A short original video, two minutes (2:00) or under per YouTube's clock, explaining a STEM concept.",
+      fee:"Free",
+      howToApply:"Submit your video and application online, then score at least 5 peer entries as part of the process.",
+      notes:"Grand prize is a $250,000 scholarship, plus $50,000 for the winner's teacher and a $100,000 science lab for their school.",
+      link:"https://breakthroughjuniorchallenge.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"think", name:"MIT THINK Scholars Program", type:"Competition", category:"STEM",
+      blurb:"Pitch a STEM research idea (not a finished project) and MIT undergrads will fund and mentor you through it.",
+      deadlineDate:"2027-01-01", deadlineText:"Applications typically open in November",
+      eligibility:"Full-time high school students with a US address (citizenship not required). Solo or in pairs.",
+      whatYouSubmit:"A written research or innovation proposal (about 10 pages) describing a project you could finish in one semester on a $1,000 budget.",
+      fee:"Free",
+      howToApply:"Submit your proposal online; semifinalists get a video interview before finalists are chosen.",
+      notes:"Up to 6 finalists get mentorship, funding, and a trip to MIT. No prior lab access is needed to apply.",
+      link:"https://think.mit.edu/", lastVerified:"June 2026"
+    },
+    {
+      id:"davidson", name:"Davidson Fellows Scholarship", type:"Competition", category:"Both",
+      blurb:"A $25,000–$100,000 scholarship for a single piece of exceptional work in STEM, literature, music, or philosophy.",
+      deadlineDate:null, deadlineText:"Typically mid-February (2026 cycle has closed; 2027 dates open Fall 2026)",
+      eligibility:"Age 18 or younger, US citizen or permanent resident (or stationed abroad on US military duty). Solo or teams of 2, any grade level.",
+      whatYouSubmit:"Category-specific materials (a research paper for STEM categories, a portfolio for literature or music) plus two nominator forms.",
+      fee:"Free",
+      howToApply:"Submit a short eligibility summary first; if approved, you'll complete the full application.",
+      notes:"Community-service projects and pure literature reviews aren't eligible; judges want graduate-level depth in a real piece of work.",
+      link:"https://www.davidsongifted.org/gifted-programs/fellows-scholarship/", lastVerified:"June 2026"
+    },
+    {
+      id:"conrad", name:"Conrad Challenge", type:"Competition", category:"Both",
+      blurb:"A team innovation competition that blends STEM, entrepreneurship, and pitching a real-world solution.",
+      deadlineDate:null, deadlineText:"Registration usually opens in August; submissions due in January (2025–26 cycle closed Jan 8, 2026)",
+      eligibility:"Ages 13–18, teams of 2–5 with one adult coach, from anywhere in the world.",
+      whatYouSubmit:"A Lean Canvas, an Innovation Brief, a short pitch video, and a public team website.",
+      fee:"Registration fee applies (discounts available for teams with financial need)",
+      howToApply:"Register your team online, then move through the Activation and Innovation stages on their published timeline.",
+      notes:"Top teams are named Pete Conrad Scholars and present at an in-person Innovation Summit at Space Center Houston.",
+      link:"https://www.conradchallenge.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"genius", name:"Genius Olympiad", type:"Competition", category:"Both",
+      blurb:"An environmental-issues competition spanning science, engineering, art, film, music, writing, and business.",
+      deadlineDate:null, deadlineText:"Typically early March (2026 cycle's extended deadline was March 7)",
+      eligibility:"Grades 9–12, ages 13–21, from anywhere in the world. Students under 17 need an adult supervisor on-site.",
+      whatYouSubmit:"A project in your chosen discipline (research poster, artwork, short film, business plan, and so on), all tied to an environmental theme.",
+      fee:"Around $50–60 to apply, plus a few hundred dollars in participation fees if selected as a finalist (this one adds up; budget for it)",
+      howToApply:"Apply online; finalists then register and travel to Rochester Institute of Technology in New York for the in-person event in June.",
+      notes:"Science-category winners are encouraged to also submit their research to the International Journal of High School Research.",
+      link:"https://geniusolympiad.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"diamond", name:"Diamond Challenge", type:"Competition", category:"Both",
+      blurb:"A global pitch competition for an original business or social-venture idea, run by the University of Delaware.",
+      deadlineDate:null, deadlineText:"Typically mid-January (2026 cycle deadline was Jan 15, 2026)",
+      eligibility:"Ages 14–18, teams of 2–4 with one adult advisor (21+), from any country.",
+      whatYouSubmit:"A written concept submission; if you advance, a pitch deck and a short video pitch.",
+      fee:"Free",
+      howToApply:"Register your team online and submit through the platform before the deadline.",
+      notes:"Choose a Business Innovation or Social Innovation track. Top prizes run $4,500–$12,000 per track.",
+      link:"https://diamondchallenge.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"dnaday", name:"DNA Day Essay Contest", type:"Competition", category:"Both",
+      blurb:"A genetics essay contest from the American Society of Human Genetics, covering both the science and the ethical dimensions of genetics.",
+      deadlineDate:null, deadlineText:"Opens early January, closes around early March (confirm exact date on site)",
+      eligibility:"Grades 9–12, worldwide. Individual entries only.",
+      whatYouSubmit:"A 750-word essay (including in-text citations) on that year's genetics question, with at least one reference.",
+      fee:"Free",
+      howToApply:"A teacher (or parent, if homeschooled) submits the essay on the student's behalf through ashg.org.",
+      notes:"A great option for students who like writing about the ethical and societal sides of science, not just the lab side.",
+      link:"https://www.ashg.org/dna-day/", lastVerified:"June 2026"
+    },
+    {
+      id:"jsr", name:"Journal of Student Research (JSR)", type:"Journal", category:"Both",
+      blurb:"A multidisciplinary journal covering sciences, social sciences, humanities, and business, with true double-blind peer review.",
+      deadlineDate:null, deadlineText:"Rolling, with quarterly cycles (Feb / May / Aug / Nov)",
+      eligibility:"High school students worldwide; the first author needs a high-school affiliation and a teacher or advisor contact.",
+      whatYouSubmit:"A manuscript up to about 20 pages, following JSR's formatting template.",
+      fee:"Reports vary; some sources list it as free, others describe a review fee plus a fee if accepted. Confirm the current fee structure on jsr.org before submitting",
+      howToApply:"Submit through the online portal; a fast-track paid review option is available.",
+      notes:"Review typically takes 12–24 weeks. Indexed in Google Scholar, which is a nice bonus for citability.",
+      link:"https://www.jsr.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"ijhsr", name:"International Journal of High School Research (IJHSR)", type:"Journal", category:"Both",
+      blurb:"A STEM-and-social-science journal that mirrors professional academic publishing, with named peer reviewers.",
+      deadlineDate:null, deadlineText:"Rolling; no deadline at all",
+      eligibility:"High school students; a mentor or teacher is recommended but not required as a co-author.",
+      whatYouSubmit:"Original research or a literature review, up to 15 pages, with ACS-style citations and 3 suggested reviewers.",
+      fee:"No fee to submit; a $300 publication fee applies once accepted (free/reduced-lunch students can request a scholarship)",
+      howToApply:"Submit through the journal's online system.",
+      notes:"All submissions are screened for plagiarism and AI-generated content before review.",
+      link:"https://ijhsr.terrajournals.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"concord", name:"The Concord Review", type:"Journal", category:"Humanities",
+      blurb:"The only quarterly journal in the world devoted entirely to history research papers by secondary students.",
+      deadlineDate:null, deadlineText:"Rolling, with quarterly cutoffs: Feb 1, May 1, Aug 1, Nov 1",
+      eligibility:"Any secondary student worldwide, as long as the paper was finished before graduating. Sole authorship only.",
+      whatYouSubmit:"A history research essay, typically 5,000–10,000+ words, with Chicago/Turabian-style endnotes and a bibliography (no footnotes).",
+      fee:"$70 for an eBook membership (includes a year's subscription); $110–150 for print",
+      howToApply:"Submit your essay as a Word or RTF file (not a PDF or Google Doc) through tcr.org/submit.",
+      notes:"Extremely selective (roughly 5% of submissions get published), but every paper stays eligible across the next 4 issues, so a “no” this quarter isn't final.",
+      link:"https://www.tcr.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"nhd", name:"National History Day (NHD)", type:"Competition", category:"Humanities",
+      blurb:"A research-based history competition that runs from school contests all the way to a national finals.",
+      deadlineDate:null, deadlineText:"Set by your local or state affiliate, usually winter, well before the June national contest",
+      eligibility:"Grades 6–12 (Junior 6–8, Senior 9–12), public, private, or home school. Individual or teams of 2–5 (the Paper category must be solo).",
+      whatYouSubmit:"A project connected to the year's theme, in one of five formats: paper, exhibit, documentary, performance, or website.",
+      fee:"Small entry fee at the local level (often $10–20; varies by affiliate)",
+      howToApply:"Start at your school or local affiliate contest; winners advance to state, then nationals.",
+      notes:"The 2027 theme is “Innovation in History: Impact, Influence, Change.”",
+      link:"https://nhd.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"johnlocke", name:"John Locke Essay Competition", type:"Competition", category:"Humanities",
+      blurb:"A globally competitive essay contest judged by Oxford and Princeton academics across 10 subject areas.",
+      deadlineDate:null, deadlineText:"2026 cycle deadline (May 31, 2026) has passed; 2027 cycle expected to open around February with a similar late-May deadline",
+      eligibility:"Age 18 or under (Junior division for age 14 or under), any country.",
+      whatYouSubmit:"A single 2,000-word essay answering one provided question in your chosen category: Philosophy, Politics, Economics, History, Psychology, Theology, Law, Public Policy, Science & Technology, or International Relations.",
+      fee:"Free by the main deadline; a small fee applies for late extensions",
+      howToApply:"Register online, then upload your essay as a PDF with the required filename format before the deadline.",
+      notes:"You can enter multiple categories (one essay each), and you'll need an academic referee's email at registration.",
+      link:"https://www.johnlockeinstitute.com/essay-competition", lastVerified:"June 2026"
+    },
+    {
+      id:"scholastic", name:"Scholastic Art & Writing Awards", type:"Competition", category:"Humanities",
+      blurb:"The longest-running US recognition program for creative teens, across 29 art and writing categories.",
+      deadlineDate:null, deadlineText:"Regional deadlines fall between December and January (varies by region)",
+      eligibility:"Grades 7–12 (ages 13+), US, US territories, Canada, or American schools abroad.",
+      whatYouSubmit:"A single work or a senior portfolio in your chosen category, with writing categories including journalism, persuasive/critical essay, short story, poetry, and more.",
+      fee:"$10 per individual entry, $30 per portfolio (fee waivers available)",
+      howToApply:"Find your region and submit through the online portal at artandwriting.org.",
+      notes:"Gold Key regional winners advance to national judging, where Gold or Silver Medalists can earn scholarships up to $12,500. Grades 10–11 poetry Gold Key winners may also be invited to apply for the National Student Poets Program, the country's top youth-poet honor; there's no separate application, it flows from this one.",
+      link:"https://www.artandwriting.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"ippf", name:"International Public Policy Forum (IPPF)", type:"Competition", category:"Humanities",
+      blurb:"A team debate competition that mixes persuasive essay writing with live oral argument on a real policy question.",
+      deadlineDate:null, deadlineText:"Qualifying essay typically due mid-October",
+      eligibility:"Grades 9–12, teams of at least 3 students from the same school or after-school program, with an adult coach.",
+      whatYouSubmit:"A 3,000-word qualifying essay arguing one side of the year's resolution; advancing teams then exchange written rebuttals.",
+      fee:"$25 per team (free if you register by mid-August)",
+      howToApply:"Register your team online at ippfdebate.com, then submit your qualifying essay by the deadline.",
+      notes:"The Elite Eight teams get an all-expenses-paid trip to NYU for live oral debates; the champion wins $10,000.",
+      link:"https://www.ippfdebate.com/", lastVerified:"June 2026"
+    },
+    {
+      id:"schola", name:"The Schola", type:"Journal", category:"Humanities",
+      blurb:"An international, highly selective quarterly journal for humanities and social-science essays by high schoolers.",
+      deadlineDate:null, deadlineText:"Rolling, but essays must be submitted by early summer of your graduating year at the latest",
+      eligibility:"High school students worldwide; sole authorship (essays can be developed from a paper you wrote for school).",
+      whatYouSubmit:"An essay up to about 4,000–5,000 words in philosophy, history, art history, literature, politics, public policy, or sociology.",
+      fee:"Around $150–180 per essay (no fee waivers offered)",
+      howToApply:"Submit your Word-format essay and pay the fee through theschola.org.",
+      notes:"No acceptance rate is published, but reviewers are PhD-level academics and the bar is described as high.",
+      link:"https://theschola.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"biogeneius", name:"International BioGENEius Challenge", type:"Competition", category:"STEM",
+      blurb:"A biotechnology research competition where students pick one of three tracks (healthcare, sustainability, or the environment) and present to industry judges.",
+      deadlineDate:null, deadlineText:"At-Large deadline is mid-May (2026 cycle's was May 13); state-partner deadlines vary",
+      eligibility:"Grades 9–12 in the US. Enter through a State Partner program (CA, CO, DE, GA, IL, IA, KS, MD, NM, NC, PA, or VA) if you're in one of those states, or the virtual At-Large track if you're not.",
+      whatYouSubmit:"A research abstract, a mentor verification form, and consent documents, then a presentation to judges if you advance.",
+      fee:"Mostly free; some local or state rounds charge a small fee for materials or judging",
+      howToApply:"Apply online through the Biotechnology Institute's application portal.",
+      notes:"At-Large applicants are encouraged to have placed in the top 5% of a local, regional, or state science fair to be competitive. Finals are held at the BioFuture Conference in New York.",
+      link:"https://biotechinstitute.org/application-portal/", lastVerified:"June 2026"
+    },
+    {
+      id:"usaco", name:"USA Computing Olympiad (USACO)", type:"Competition", category:"STEM",
+      blurb:"A free, fully online series of programming contests that doubles as the path to the US team at the International Olympiad in Informatics.",
+      deadlineDate:null, deadlineText:"Ongoing; four contests per year, roughly December through the US Open in March",
+      eligibility:"Open to any pre-college student worldwide (only US students are eligible for official advancement and the US Open/IOI pathway).",
+      whatYouSubmit:"Working code that solves algorithmic problems within a 4-hour window (5 hours for the US Open). No application or qualifying round required to start.",
+      fee:"Free",
+      howToApply:"Create a free account at usaco.org and compete whenever the next contest window opens.",
+      notes:"Worth flagging: this is a timed programming contest, not a written research paper; a good fit for CS-minded students who want a strong credential without an independent project. Everyone starts in the Bronze division and moves up based on performance.",
+      link:"https://usaco.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"sjwp", name:"Stockholm Junior Water Prize (US)", type:"Competition", category:"STEM",
+      blurb:"Called the world's most prestigious award for a high schooler's water-research project, entered through a state-by-state pathway.",
+      deadlineDate:null, deadlineText:"State competition entry deadline typically falls in April (2026 cycle has closed; 2027 cycle opens in early 2027)",
+      eligibility:"Grades 9–12, age 15 or older by August 1 of the competition year. Individual or team of up to two.",
+      whatYouSubmit:"A water-related science research paper, plus a roughly 2-minute video, submitted through your state's competition first.",
+      fee:"Free",
+      howToApply:"Enter through your state's Water Environment Federation Member Association; regional winners and self-nominated students both enter at the state level.",
+      notes:"State winners compete in a virtual round in May, with the top 20 invited to in-person national finals. The national winner represents the US at World Water Week in Stockholm.",
+      link:"https://www.wef.org/membership--community/students--young-professionals/sjwp/", lastVerified:"June 2026"
+    },
+    {
+      id:"exploravision", name:"Toshiba/NSTA ExploraVision", type:"Competition", category:"STEM",
+      blurb:"Teams imagine what an everyday technology could look like 20 years from now, then research the science needed to get there.",
+      deadlineDate:null, deadlineText:"Typically early February (2026 cycle has closed; 2027 deadline expected around February 2027)",
+      eligibility:"Full-time K–12 students in the US or Canada. The High School category covers grades 10–12 (a separate Middle category covers grades 7–9). Teams of 2–4 with a coach.",
+      whatYouSubmit:"A title, a 150-word abstract, an 11-page project description, a bibliography, and five sample web pages.",
+      fee:"Free",
+      howToApply:"Register and submit online; your coach submits on the team's behalf.",
+      notes:"Regional winners are announced in March, national winners in April, with an Awards Weekend in Washington, DC. First-place team members each receive a $10,000 savings bond.",
+      link:"https://www.exploravision.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"technovation", name:"Technovation Girls", type:"Competition", category:"Both",
+      blurb:"Teams build a mobile app, web app, or AI tool that solves a real community problem, then pitch it like a startup.",
+      deadlineDate:null, deadlineText:"Submission deadline typically falls in April (2026 cycle has closed; 2027 cycle expected to open in late 2026)",
+      eligibility:"Ages 8–18, open only to students who identify as female, trans, nonbinary, or gender-nonconforming. Junior (13–15) and Senior (16–18) divisions cover high school. Teams of 1–5.",
+      whatYouSubmit:"Your app's code, a business/user-adoption plan, a pitch video, and a technical video. No prior coding experience required.",
+      fee:"Free",
+      howToApply:"Register on the Technovation platform, work through the free curriculum with a mentor, then submit by the deadline.",
+      notes:"Worth flagging up front: this one is specifically for girls and gender-nonconforming participants, not open to all students. Finalists travel to an in-person World Summit (Bengaluru, India for 2026).",
+      link:"https://technovationchallenge.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"studentcam", name:"C-SPAN StudentCam", type:"Competition", category:"Humanities",
+      blurb:"A national documentary contest where you research a civics or history topic and tell its story in a short original video.",
+      deadlineDate:null, deadlineText:"Mid-to-late January annually (the next cycle launches in August 2026)",
+      eligibility:"Grades 9–12 compete in the High School category, judged regionally (West/Central/East); grades 6–8 have their own category. Solo or teams of 2–3.",
+      whatYouSubmit:"A 5–6 minute documentary built around that year's theme, including clips of relevant C-SPAN footage and a cited works list.",
+      fee:"Free",
+      howToApply:"Upload your video to YouTube, Vimeo, Google Drive, or similar, then submit the link through the online entry form.",
+      notes:"$100,000 in prizes is split across 150 winning entries (plus prizes for teacher advisers), so the odds are friendlier than most national contests. A smartphone and free editing software are genuinely enough to compete.",
+      link:"https://www.studentcam.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"nytcontests", name:"New York Times Student Contests (Learning Network)", type:"Competition", category:"Humanities",
+      blurb:"A rotating lineup of free writing, audio, and multimedia contests that runs all school year; pick whichever format fits your voice.",
+      deadlineDate:null, deadlineText:"Rotating windows year-round (Open Letters typically runs late Feb to early April); check the current Learning Network calendar for exact dates",
+      eligibility:"Students roughly ages 13–19, anywhere in the world. No subscription to the Times required.",
+      whatYouSubmit:"Depends on the contest: a short opinion piece for Open Letters, a 100-word personal narrative for My Tiny Memoir, a short podcast for Audio Stories, or a review, STEM explainer, or photo essay, among others.",
+      fee:"Free",
+      howToApply:"Submit through the official entry form on the Learning Network site during whichever contest's open window.",
+      notes:"Winning entries get published on the Learning Network (and sometimes the print Times) under the student's own byline; real publication, not just a certificate.",
+      link:"https://www.nytimes.com/section/learning", lastVerified:"June 2026"
+    },
+    {
+      id:"bennington", name:"Bennington College Young Writers Awards", type:"Competition", category:"Humanities",
+      blurb:"A free, prestigious poetry/fiction/nonfiction contest from a college with a serious literary pedigree, and a potential path to a writing scholarship.",
+      deadlineDate:"2026-11-01", deadlineText:"Submissions open September 1",
+      eligibility:"Grades 9–12, anywhere in the world. One entry, in one category, per student.",
+      whatYouSubmit:"Either 1–3 poems (1,500 words total), a short story or one-act play (1,500 words / 30 minutes), or a personal/academic essay (1,500 words), reviewed and sponsored by a teacher or mentor first.",
+      fee:"Free",
+      howToApply:"Grades 9–11 submit through Bennington's online form; grade 12 students submit alongside a fee-free, non-binding Common App or Coalition App to Bennington College.",
+      notes:"Winners receive cash prizes and are eligible for substantial scholarships if they go on to enroll at Bennington.",
+      link:"https://www.bennington.edu/events/young-writers-awards", lastVerified:"June 2026"
+    },
+    {
+      id:"youngarts", name:"YoungArts National Arts Competition", type:"Competition", category:"Humanities",
+      blurb:"One of the most prestigious portfolio-based arts awards in the country; its Writing category covers short fiction, poetry, and creative nonfiction.",
+      deadlineDate:null, deadlineText:"Typically early October (2026 cycle closed Oct 8, 2025; 2027 cycle opens Summer 2026)",
+      eligibility:"Grades 10–12 or ages 15–18, US citizens or permanent residents (or otherwise legally able to receive US taxable income).",
+      whatYouSubmit:"A portfolio or audition in one of 10 disciplines. Writing is most relevant for research-focused students, but Visual Arts, Film, Design, and others are also options.",
+      fee:"$35 application fee (fee waivers available)",
+      howToApply:"Apply online through youngarts.org during the open application window.",
+      notes:"Winners receive cash awards from $250–$10,000, and those selected \"with distinction\" are invited to a fully-funded National YoungArts Week in Miami.",
+      link:"https://youngarts.org/", lastVerified:"June 2026"
+    }    ,
+    {
+      id:"genesinspace", name:"Genes in Space", type:"Competition", category:"STEM",
+      blurb:"Design a DNA experiment for the International Space Station, and if you win, astronauts run your experiment in orbit.",
+      deadlineDate:null, deadlineText:"Open January through April each year (2026 cycle closed; 2027 cycle opens January 2027)",
+      eligibility:"Grades 7-12, US students only (public, private, or homeschool). Individual or pairs.",
+      whatYouSubmit:"A one-page written proposal describing a DNA analysis experiment you would run aboard the ISS, covering the problem, hypothesis, experimental plan, and tools needed.",
+      fee:"Free",
+      howToApply:"Submit your proposal online at genesinspace.org during the open window.",
+      notes:"Run by miniPCR bio and Boeing, with ISS National Laboratory support. Semifinalists pitch a 60-second video before five finalists are selected. Finalist schools receive a full DNA Discovery System biotech kit.",
+      link:"https://www.genesinspace.org/", lastVerified:"June 2026"
+    },
+    {
+      id:"voiceofdemocracy", name:"Voice of Democracy", type:"Competition", category:"Humanities",
+      blurb:"A patriotic audio-essay competition run by the Veterans of Foreign Wars since 1947, with over $2 million in annual scholarships.",
+      deadlineDate:"2026-10-31", deadlineText:"Midnight, submitted to your local VFW Post",
+      eligibility:"Grades 9-12, enrolled in a US public, private, parochial, or home school. US citizenship is not required; lawful permanent residents are eligible.",
+      whatYouSubmit:"A written essay on the year's patriotic theme (2026-27: \"What a Veteran Taught Me About America\"), plus a 3-to-5 minute audio recording in your own voice. Submitted on a flash drive or CD to a local participating VFW Post.",
+      fee:"Free",
+      howToApply:"Find a participating local VFW Post at vfw.org and submit your essay and audio recording to them directly by October 31.",
+      notes:"National first-place winner receives a $35,000 scholarship. State first-place winners each receive at least $1,000 plus a trip to Valley Forge for the Founding Forward Spirit of America program.",
+      link:"https://www.vfw.org/community/youth-and-education/youth-scholarships", lastVerified:"June 2026"
+    },
+    {
+      id:"afsa", name:"AFSA National High School Essay Contest", type:"Competition", category:"Humanities",
+      blurb:"Imagine yourself as a US diplomat tasked with resolving a real foreign policy crisis, then write the essay that makes the case.",
+      deadlineDate:null, deadlineText:"March 1 annually (2026 cycle has closed; 2027 cycle prompt announced fall 2026)",
+      eligibility:"Grades 9-12, US citizens or lawful permanent residents, at any public, private, parochial, or homeschool. Students whose parents are in the Foreign Service are not eligible.",
+      whatYouSubmit:"A 1,000-1,250 word essay responding to the year's prompt, formatted in MLA style with a works cited list. A teacher or adult sponsor must be named on the submission form.",
+      fee:"Free",
+      howToApply:"Submit through the online portal at afsa.org during the open window.",
+      notes:"Run by the American Foreign Service Association in partnership with the US Institute of Peace. The winner receives $2,500, a trip to Washington DC to meet State Department leadership, and a Semester at Sea scholarship. The runner-up receives $1,250 and a spot at the National Student Leadership Conference.",
+      link:"https://afsa.org/essay-contest", lastVerified:"June 2026"
+    },
+    {
+      id:"himcm", name:"HiMCM: High School Mathematical Contest in Modeling", type:"Competition", category:"STEM",
+      blurb:"Teams of up to four high schoolers have 14 days to build a mathematical model for a messy real-world problem and write it up as a formal report.",
+      deadlineDate:null, deadlineText:"Registration opens in September; contest runs for two weeks in November",
+      eligibility:"Any high school student worldwide. Teams of up to 4 from the same school, with a faculty advisor who registers the team.",
+      whatYouSubmit:"A written solution report up to 25 pages (including a 1-page summary sheet), submitted as a PDF at the end of the two-week contest window.",
+      fee:"Check comap.com for current registration fees",
+      howToApply:"A faculty advisor registers the team at himcmcontest.org in September. No pre-qualifying needed.",
+      notes:"Run by COMAP. Top US teams (Meritorious or above) qualify for the international IM2C competition in the spring. Awards go from Successful Participant up through Finalist and Outstanding Winner.",
+      link:"https://www.comap.com/contests/himcm-midmcm", lastVerified:"June 2026"
+    },
+    {
+      id:"igem", name:"iGEM: International Genetically Engineered Machine Competition", type:"Competition", category:"STEM",
+      blurb:"The flagship synthetic biology competition, where teams design and build a genetically engineered system in the lab over a full season, then present at a global Jamboree in Paris.",
+      deadlineDate:null, deadlineText:"Season runs May through October; Grand Jamboree in November (2026: November 13-16, Paris)",
+      eligibility:"High school students worldwide. All members must be currently enrolled in secondary school. A faculty PI (teacher or staff) is required to register the team.",
+      whatYouSubmit:"A project wiki, safety documentation, a judging form, supporting videos, and a live in-person or virtual judging session. Actual lab work building and testing your design is required throughout the season.",
+      fee:"Substantial program fee; see competition.igem.org for current pricing",
+      howToApply:"The team PI (a teacher or school staff member) registers at competition.igem.org in January or February.",
+      notes:"This is a major, months-long commitment requiring genuine lab access, not just writing. Budget for registration fees, lab supplies, and travel to Paris. High school teams compete in their own section alongside collegiate teams, with a dedicated High School Grand Prize.",
+      link:"https://competition.igem.org/high-school", lastVerified:"June 2026"
+    }
+
+  ];
+
+  var state = {
+    entries: [],
+    search: "",
+    category: "all",
+    type: "all",
+    sort: "deadline",
+    activeId: null,
+    editingId: null,
+    editUnlocked: false
+  };
+  var pendingConfirmAction = null;
+  var toastTimer = null;
+
+  /* ---------- helpers ---------- */
+  function $(id){ return document.getElementById(id); }
+  function escapeHtml(str){
+    return (str === undefined || str === null ? "" : String(str)).replace(/[&<>"']/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c];
+    });
+  }
+  function richText(str){
+    var s = escapeHtml(str);
+    return s ? s.replace(/\n/g,"<br>") : "";
+  }
+  function genId(){ return "o" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function fmtDate(iso){
+    if(!iso) return "";
+    var d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString("en-US",{month:"long", day:"numeric", year:"numeric"});
+  }
+  function fmtShort(iso){
+    var d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString("en-US",{month:"short", day:"numeric"}).toUpperCase();
+  }
+  function fmtMonthYear(d){ return d.toLocaleDateString("en-US",{month:"long", year:"numeric"}); }
+  function daysLeft(iso){
+    var d = new Date(iso + "T23:59:59");
+    var now = new Date();
+    return Math.ceil((d - now) / 86400000);
+  }
+  function typeIcon(t){
+    if(t === "Journal") return ICONS.journal;
+    if(t === "Conference") return ICONS.conference;
+    return ICONS.competition;
+  }
+  function feeChip(fee){
+    if(!fee) return "See details";
+    var f = fee.trim();
+    if(/^free/i.test(f)) return "Free";
+    var m = f.match(/\$[\d,]+(\.\d+)?/);
+    if(m) return m[0] + " fee";
+    return "See details";
+  }
+  function getStamp(e){
+    if(!e.deadlineDate){
+      var t = (e.deadlineText || "Ongoing").split(/[,;(]/)[0].trim();
+      if(t.length > 18) t = t.slice(0,17) + "…";
+      return {text:t, cls:"normal"};
+    }
+    var dl = daysLeft(e.deadlineDate);
+    if(dl < 0) return {text:"Passed", cls:"muted"};
+    if(dl === 0) return {text:"Due today", cls:"urgent"};
+    if(dl <= 14) return {text:dl + "d left", cls:"urgent"};
+    if(dl <= 90) return {text:dl + "d left", cls:"normal"};
+    return {text:fmtShort(e.deadlineDate), cls:"normal"};
+  }
+  function compareEntries(a,b,mode){
+    if(mode === "name") return a.name.localeCompare(b.name);
+    var aHas = !!a.deadlineDate, bHas = !!b.deadlineDate;
+    var aPassed = aHas && daysLeft(a.deadlineDate) < 0;
+    var bPassed = bHas && daysLeft(b.deadlineDate) < 0;
+    function rank(has,passed){ return passed ? 2 : (has ? 0 : 1); }
+    var ra = rank(aHas,aPassed), rb = rank(bHas,bPassed);
+    if(ra !== rb) return ra - rb;
+    if(ra === 0 || ra === 2) return new Date(a.deadlineDate) - new Date(b.deadlineDate);
+    return a.name.localeCompare(b.name);
+  }
+
+  /* ---------- storage ---------- */
+  /* Uses Claude's built-in shared storage when this page is running inside a
+     Claude.ai artifact. Outside Claude.ai (e.g. hosted on GitHub Pages), that
+     API doesn't exist, so this automatically falls back to the browser's
+     own localStorage instead. Either way, the 22 starter entries below are
+     always available as the baseline. */
+  function hasClaudeStorage(){
+    return (typeof window.storage !== "undefined") && window.storage &&
+      typeof window.storage.get === "function" && typeof window.storage.set === "function";
+  }
+  function loadFromLocalStorage(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch(e){}
+    return null;
+  }
+  function persistToLocalStorage(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
+      return true;
+    } catch(e){
+      return false;
+    }
+  }
+  function loadEntries(){
+    if(hasClaudeStorage()){
+      return window.storage.get(STORAGE_KEY, SHARED).then(function(res){
+        if(res && res.value){
+          var parsed = JSON.parse(res.value);
+          if(Array.isArray(parsed) && parsed.length) return parsed;
+        }
+        return null;
+      }).catch(function(){ return loadFromLocalStorage(); });
+    }
+    return Promise.resolve(loadFromLocalStorage());
+  }
+  function persist(){
+    if(firestoreDb){
+      return persistToFirestore();
+    }
+    if(hasClaudeStorage()){
+      return window.storage.set(STORAGE_KEY, JSON.stringify(state.entries), SHARED).then(function(res){
+        return !!res;
+      }).catch(function(){ return persistToLocalStorage(); });
+    }
+    return Promise.resolve(persistToLocalStorage());
+  }
+
+  /* ---------- Firebase real-time sync (optional) ---------- */
+  function initFirebaseIfEnabled(){
+    if(!FIREBASE_ENABLED) return false;
+    try {
+      if(typeof firebase === "undefined") return false;
+      if(!firebase.apps || !firebase.apps.length){
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      firestoreDb = firebase.firestore();
+      return true;
+    } catch(e){
+      firestoreDb = null;
+      return false;
+    }
+  }
+  function persistToFirestore(){
+    return firestoreDb.collection("submission_index").doc("data").set({
+      entries: state.entries,
+      lastUpdated: new Date().toISOString()
+    }).then(function(){ return true; }).catch(function(){
+      return persistToLocalStorage();
+    });
+  }
+  var firestoreInitialLoadDone = false;
+  function subscribeToFirestore(){
+    firestoreDb.collection("submission_index").doc("data").onSnapshot(function(doc){
+      var data = doc.exists ? doc.data() : null;
+      if(data && Array.isArray(data.entries) && data.entries.length){
+        state.entries = data.entries;
+      } else if(!firestoreInitialLoadDone){
+        state.entries = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        persistToFirestore();
+      } else {
+        return;
+      }
+      if(!firestoreInitialLoadDone){
+        firestoreInitialLoadDone = true;
+        finishInit(true);
+      } else {
+        render();
+      }
+    }, function(){
+      if(!firestoreInitialLoadDone){
+        firestoreInitialLoadDone = true;
+        firestoreDb = null;
+        loadWithoutFirebase();
+      }
+    });
+  }
+
+  /* ---------- edit lock ---------- */
+  function isEditUnlocked(){
+    try { return localStorage.getItem(EDIT_UNLOCK_KEY) === "true"; }
+    catch(e){ return false; }
+  }
+  function setEditUnlocked(val){
+    try { localStorage.setItem(EDIT_UNLOCK_KEY, val ? "true" : "false"); } catch(e){}
+    state.editUnlocked = !!val;
+  }
+  function checkUrlForUnlock(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var attempt = params.get("edit");
+      if(attempt && attempt === EDIT_PASSPHRASE){
+        setEditUnlocked(true);
+        var cleanUrl = window.location.origin + window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    } catch(e){}
+  }
+  function renderEditUI(){
+    var unlocked = state.editUnlocked;
+    $("addBtn").hidden = !unlocked;
+    $("detailFooter").hidden = !unlocked;
+    $("lockedFooterLinks").hidden = unlocked;
+    $("unlockedFooterLinks").hidden = !unlocked;
+  }
+
+  function init(){
+    checkUrlForUnlock();
+    state.editUnlocked = isEditUnlocked();
+    renderEditUI();
+    if(initFirebaseIfEnabled()){
+      subscribeToFirestore();
+    } else {
+      loadWithoutFirebase();
+    }
+  }
+  function loadWithoutFirebase(){
+    loadEntries().then(function(loaded){
+      if(loaded){
+        state.entries = loaded;
+        finishInit(true);
+      } else {
+        state.entries = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        persist().then(function(ok){ finishInit(ok); });
+      }
+    });
+  }
+  function finishInit(storageOk){
+    $("loadingState").hidden = true;
+    $("grid").hidden = false;
+    render();
+    if(!storageOk) showToast("Heads up — changes may not be saved right now.");
+  }
+
+  /* ---------- rendering ---------- */
+  function render(){ renderIssueLine(); renderGrid(); }
+
+  function renderIssueLine(){
+    var all = state.entries;
+    var c = {STEM:0, Humanities:0, Both:0};
+    all.forEach(function(e){ if(c[e.category] !== undefined) c[e.category]++; });
+    $("issueLine").innerHTML =
+      "<span>" + all.length + " opportunities</span><span class=\"dot\">·</span>" +
+      "<span>" + c.STEM + " STEM</span><span class=\"dot\">·</span>" +
+      "<span>" + c.Humanities + " humanities</span><span class=\"dot\">·</span>" +
+      "<span>" + c.Both + " both</span>";
+  }
+
+  function getFiltered(){
+    var q = state.search.trim().toLowerCase();
+    var list = state.entries.filter(function(e){
+      if(state.category !== "all" && e.category !== state.category) return false;
+      if(state.type !== "all" && e.type !== state.type) return false;
+      if(q){
+        var hay = (e.name + " " + (e.blurb||"")).toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    list.sort(function(a,b){ return compareEntries(a,b,state.sort); });
+    return list;
+  }
+
+  function renderGrid(){
+    var list = getFiltered();
+    var grid = $("grid");
+    var empty = $("emptyState");
+    if(list.length === 0){
+      grid.innerHTML = "";
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    grid.innerHTML = list.map(cardHtml).join("");
+  }
+
+  function cardHtml(e){
+    var stamp = getStamp(e);
+    var catClass = "cat-" + e.category.toLowerCase();
+    return (
+      "<article class=\"card " + catClass + "\" data-id=\"" + e.id + "\" tabindex=\"0\" role=\"button\" aria-label=\"View details for " + escapeHtml(e.name) + "\">" +
+        "<div class=\"card-top\">" +
+          "<span class=\"type-tag\">" + typeIcon(e.type) + " " + e.type + "</span>" +
+          "<span class=\"stamp " + stamp.cls + "\">" + escapeHtml(stamp.text) + "</span>" +
+        "</div>" +
+        "<h3 class=\"card-title\">" + escapeHtml(e.name) + "</h3>" +
+        "<span class=\"badge " + catClass + "\">" + e.category + "</span>" +
+        "<p class=\"card-blurb\">" + escapeHtml(e.blurb || "") + "</p>" +
+        "<div class=\"card-meta\">" +
+          "<span>" + ICONS.tag + " " + escapeHtml(feeChip(e.fee)) + "</span>" +
+          "<span class=\"card-cta\">View details →</span>" +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function detailHtml(e){
+    var catClass = "cat-" + e.category.toLowerCase();
+    var deadlineLine = e.deadlineDate ? fmtDate(e.deadlineDate) + (e.deadlineText ? ", " + escapeHtml(e.deadlineText) : "") : (escapeHtml(e.deadlineText) || "Not specified");
+    return (
+      "<div class=\"detail-head\">" +
+        "<div>" +
+          "<div class=\"tags\">" +
+            "<span class=\"badge " + catClass + "\">" + e.category + "</span>" +
+            "<span class=\"type-tag\">" + typeIcon(e.type) + " " + e.type + "</span>" +
+          "</div>" +
+          "<h2 class=\"detail-title\">" + escapeHtml(e.name) + "</h2>" +
+        "</div>" +
+      "</div>" +
+      (e.blurb ? "<p class=\"detail-overview\">" + escapeHtml(e.blurb) + "</p>" : "") +
+      "<div class=\"section-label\">Eligibility</div><p>" + (richText(e.eligibility) || "<em>Not specified.</em>") + "</p>" +
+      "<div class=\"section-label\">Deadline &amp; fee</div><p>" + deadlineLine + "<br>" + (richText(e.fee) || "Not specified") + "</p>" +
+      "<div class=\"section-label\">What you submit</div><p>" + (richText(e.whatYouSubmit) || "<em>Not specified.</em>") + "</p>" +
+      "<div class=\"section-label\">How to apply</div><p>" + (richText(e.howToApply) || "<em>Not specified.</em>") + "</p>" +
+      (e.notes ? "<div class=\"section-label\">Good to know</div><p>" + richText(e.notes) + "</p>" : "") +
+      "<a class=\"btn btn-primary official-link\" href=\"" + escapeHtml(e.link || "#") + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + ICONS.external + " Official site</a>" +
+      "<div class=\"verified\">Last verified " + escapeHtml(e.lastVerified || "") + "</div>"
+    );
+  }
+
+  /* ---------- modal control ---------- */
+  function openDetail(id){
+    var e = state.entries.filter(function(x){ return x.id === id; })[0];
+    if(!e) return;
+    state.activeId = id;
+    $("detailBody").innerHTML = detailHtml(e);
+    $("detailModal").hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeDetail(){ $("detailModal").hidden = true; document.body.style.overflow = ""; }
+
+  function openForm(id){
+    state.editingId = id || null;
+    var e = id ? state.entries.filter(function(x){ return x.id === id; })[0] : null;
+    $("formTitle").textContent = id ? "Edit opportunity" : "Add opportunity";
+    setVal("f-name", e && e.name);
+    setVal("f-type", e && e.type);
+    setVal("f-category", e && e.category);
+    setVal("f-link", e && e.link);
+    setVal("f-blurb", e && e.blurb);
+    setVal("f-deadlineDate", e && e.deadlineDate);
+    setVal("f-deadlineText", e && e.deadlineText);
+    setVal("f-eligibility", e && e.eligibility);
+    setVal("f-whatYouSubmit", e && e.whatYouSubmit);
+    setVal("f-fee", e && e.fee);
+    setVal("f-howToApply", e && e.howToApply);
+    setVal("f-notes", e && e.notes);
+    $("formModal").hidden = false;
+    document.body.style.overflow = "hidden";
+    $("f-name").focus();
+  }
+  function setVal(id,val){ $(id).value = val || ""; }
+  function closeForm(){ $("formModal").hidden = true; document.body.style.overflow = ""; state.editingId = null; }
+
+  function openConfirm(message, onConfirm){
+    pendingConfirmAction = onConfirm;
+    $("confirmMessage").textContent = message;
+    $("confirmModal").hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeConfirm(){ $("confirmModal").hidden = true; document.body.style.overflow = ""; pendingConfirmAction = null; }
+
+  function closeBackup(){ $("backupModal").hidden = true; document.body.style.overflow = ""; }
+
+  function showToast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+  }
+
+  /* ---------- event wiring ---------- */
+  document.addEventListener("DOMContentLoaded", function(){
+
+    $("addBtn").innerHTML = ICONS.plus + " Add opportunity";
+
+    $("grid").addEventListener("click", function(e){
+      var card = e.target.closest(".card");
+      if(card) openDetail(card.getAttribute("data-id"));
+    });
+    $("grid").addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){
+        var card = e.target.closest(".card");
+        if(card){ e.preventDefault(); openDetail(card.getAttribute("data-id")); }
+      }
+    });
+
+    $("searchInput").addEventListener("input", function(e){ state.search = e.target.value; renderGrid(); });
+    Array.prototype.forEach.call(document.querySelectorAll("#categoryPills .pill"), function(btn){
+      btn.addEventListener("click", function(){
+        Array.prototype.forEach.call(document.querySelectorAll("#categoryPills .pill"), function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        state.category = btn.getAttribute("data-cat");
+        renderGrid();
+      });
+    });
+    $("typeFilter").addEventListener("change", function(e){ state.type = e.target.value; renderGrid(); });
+    $("sortSelect").addEventListener("change", function(e){ state.sort = e.target.value; renderGrid(); });
+    $("addBtn").addEventListener("click", function(){ openForm(null); });
+
+    $("detailClose").addEventListener("click", closeDetail);
+    $("editBtn").addEventListener("click", function(){
+      var id = state.activeId;
+      closeDetail();
+      openForm(id);
+    });
+    $("removeBtn").addEventListener("click", function(){
+      var e = state.entries.filter(function(x){ return x.id === state.activeId; })[0];
+      if(!e) return;
+      openConfirm("Remove \"" + e.name + "\" from the database? This can't be undone.", function(){
+        state.entries = state.entries.filter(function(x){ return x.id !== e.id; });
+        closeDetail();
+        render();
+        return persist().then(function(ok){
+          showToast(ok ? "Removed." : "Removed locally, but couldn't sync — try again.");
+        });
+      });
+    });
+
+    $("formClose").addEventListener("click", closeForm);
+    $("formCancel").addEventListener("click", closeForm);
+    $("entryForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var data = {
+        name: $("f-name").value.trim(),
+        type: $("f-type").value,
+        category: $("f-category").value,
+        link: $("f-link").value.trim(),
+        blurb: $("f-blurb").value.trim(),
+        deadlineDate: $("f-deadlineDate").value || null,
+        deadlineText: $("f-deadlineText").value.trim(),
+        eligibility: $("f-eligibility").value.trim(),
+        whatYouSubmit: $("f-whatYouSubmit").value.trim(),
+        fee: $("f-fee").value.trim(),
+        howToApply: $("f-howToApply").value.trim(),
+        notes: $("f-notes").value.trim(),
+        lastVerified: fmtMonthYear(new Date())
+      };
+      if(!data.name || !data.type || !data.category || !data.link) return;
+      if(state.editingId){
+        var idx = -1;
+        state.entries.forEach(function(x,i){ if(x.id === state.editingId) idx = i; });
+        if(idx > -1){ data.id = state.editingId; state.entries[idx] = data; }
+      } else {
+        data.id = genId();
+        state.entries.push(data);
+      }
+      closeForm();
+      render();
+      persist().then(function(ok){
+        showToast(ok ? "Saved." : "Saved locally, but couldn't sync — try again.");
+      });
+    });
+
+    $("confirmCancel").addEventListener("click", closeConfirm);
+    $("confirmOk").addEventListener("click", function(){
+      var action = pendingConfirmAction;
+      closeConfirm();
+      if(action) action();
+    });
+
+    $("backupBtn").addEventListener("click", function(){
+      $("backupExport").value = JSON.stringify(state.entries, null, 2);
+      $("backupImport").value = "";
+      $("backupModal").hidden = false;
+      document.body.style.overflow = "hidden";
+    });
+    $("backupClose").addEventListener("click", closeBackup);
+    $("backupSelectAll").addEventListener("click", function(){ $("backupExport").select(); });
+    $("backupRestoreBtn").addEventListener("click", function(){
+      var txt = $("backupImport").value.trim();
+      if(!txt) return;
+      var parsed;
+      try { parsed = JSON.parse(txt); } catch(err){ showToast("That doesn't look like valid backup text."); return; }
+      if(!Array.isArray(parsed)){ showToast("That doesn't look like valid backup text."); return; }
+      openConfirm("Replace everything currently in the database with this backup?", function(){
+        state.entries = parsed;
+        closeBackup();
+        render();
+        return persist().then(function(ok){
+          showToast(ok ? "Restored." : "Restored locally, but couldn't sync — try again.");
+        });
+      });
+    });
+
+    function closeUnlockModal(){ $("unlockModal").hidden = true; document.body.style.overflow = ""; }
+    function attemptUnlock(){
+      var attempt = $("unlockInput").value;
+      if(attempt && attempt === EDIT_PASSPHRASE){
+        setEditUnlocked(true);
+        closeUnlockModal();
+        renderEditUI();
+        showToast("Editing unlocked on this device.");
+      } else {
+        showToast("That's not the right passcode.");
+      }
+    }
+    $("unlockBtn").addEventListener("click", function(){
+      $("unlockInput").value = "";
+      $("unlockModal").hidden = false;
+      document.body.style.overflow = "hidden";
+      $("unlockInput").focus();
+    });
+    $("unlockClose").addEventListener("click", closeUnlockModal);
+    $("unlockCancel").addEventListener("click", closeUnlockModal);
+    $("unlockSubmit").addEventListener("click", attemptUnlock);
+    $("unlockInput").addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); attemptUnlock(); }
+    });
+    $("lockBtn").addEventListener("click", function(){
+      setEditUnlocked(false);
+      renderEditUI();
+      closeDetail();
+      showToast("Editing locked on this device.");
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".modal-overlay"), function(ov){
+      ov.addEventListener("mousedown", function(e){
+        if(e.target === ov){ ov.hidden = true; document.body.style.overflow = ""; }
+      });
+    });
+    document.addEventListener("keydown", function(e){
+      if(e.key === "Escape"){
+        Array.prototype.forEach.call(document.querySelectorAll(".modal-overlay"), function(ov){ ov.hidden = true; });
+        document.body.style.overflow = "";
+      }
+    });
+
+    init();
+  });
+})();
+</script>
+</body>
+</html>
